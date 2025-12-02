@@ -47,8 +47,8 @@ public:
     int notLoggedInStackMode() const;
     void setNotLoggedInStackMode(int mode);
     
-    int notLoggedInPosition() const;
-    void setNotLoggedInPosition(int position);
+    QPoint notLoggedInReferencePosition() const;
+    void setNotLoggedInReferencePosition(const QPoint& pos);
     
     bool showNotLoggedInOverlay() const;
     void setShowNotLoggedInOverlay(bool show);
@@ -231,7 +231,8 @@ public:
     static constexpr const char* DEFAULT_THUMBNAIL_PROCESS_NAME = "exefile.exe";
     static constexpr bool DEFAULT_THUMBNAIL_SHOW_NOT_LOGGED_IN = true;
     static constexpr int DEFAULT_THUMBNAIL_NOT_LOGGED_IN_STACK_MODE = 0;
-    static constexpr int DEFAULT_THUMBNAIL_NOT_LOGGED_IN_POSITION = 0;
+    static constexpr int DEFAULT_THUMBNAIL_NOT_LOGGED_IN_REF_X = 10;
+    static constexpr int DEFAULT_THUMBNAIL_NOT_LOGGED_IN_REF_Y = 10;
     static constexpr bool DEFAULT_THUMBNAIL_SHOW_NOT_LOGGED_IN_OVERLAY = true;
     static constexpr bool DEFAULT_THUMBNAIL_SHOW_NON_EVE_OVERLAY = true;
     
@@ -292,7 +293,7 @@ private:
     
     mutable bool m_cachedShowNotLoggedIn;
     mutable int m_cachedNotLoggedInStackMode;
-    mutable int m_cachedNotLoggedInPosition;
+    mutable QPoint m_cachedNotLoggedInReferencePosition;
     mutable bool m_cachedShowNotLoggedInOverlay;
     mutable bool m_cachedShowNonEVEOverlay;
     
@@ -372,7 +373,7 @@ private:
     static constexpr const char* KEY_THUMBNAIL_PROCESS_NAMES = "thumbnail/processNames";
     static constexpr const char* KEY_THUMBNAIL_SHOW_NOT_LOGGED_IN = "thumbnail/showNotLoggedInClients";
     static constexpr const char* KEY_THUMBNAIL_NOT_LOGGED_IN_STACK_MODE = "thumbnail/notLoggedInStackMode";
-    static constexpr const char* KEY_THUMBNAIL_NOT_LOGGED_IN_POSITION = "thumbnail/notLoggedInPosition";
+    static constexpr const char* KEY_THUMBNAIL_NOT_LOGGED_IN_REF_POSITION = "thumbnail/notLoggedInReferencePosition";
     static constexpr const char* KEY_THUMBNAIL_SHOW_NOT_LOGGED_IN_OVERLAY = "thumbnail/showNotLoggedInOverlay";
     static constexpr const char* KEY_THUMBNAIL_SHOW_NON_EVE_OVERLAY = "thumbnail/showNonEVEOverlay";
 

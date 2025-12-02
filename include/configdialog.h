@@ -65,6 +65,7 @@ private slots:
     void onPopulateProcessNames();
     void onBrowseChatLogDirectory();
     void onBrowseGameLogDirectory();
+    void onSetNotLoggedInPosition();
     
     void onProfileChanged(int index);
     void onNewProfile();
@@ -115,6 +116,7 @@ private:
     QLineEdit *m_globalSearchBox;
     
     ThumbnailWidget *m_testThumbnail;
+    ThumbnailWidget *m_notLoggedInReferenceThumbnail;
     
     QComboBox *m_profileCombo;
     QPushButton *m_newProfileButton;
@@ -142,7 +144,6 @@ private:
     QSpinBox *m_opacitySpin;
     QCheckBox *m_showNotLoggedInClientsCheck;
     QComboBox *m_notLoggedInStackModeCombo;
-    QComboBox *m_notLoggedInPositionCombo;
     QCheckBox *m_showNotLoggedInOverlayCheck;
     
     QCheckBox *m_showNonEVEOverlayCheck;

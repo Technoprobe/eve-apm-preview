@@ -639,43 +639,15 @@ QPoint MainWindow::calculateNotLoggedInPosition(int index)
 {
     const Config& cfg = Config::instance();
     int stackMode = cfg.notLoggedInStackMode();  
-    int position = cfg.notLoggedInPosition();    
     
     int thumbWidth = cfg.thumbnailWidth();
     int thumbHeight = cfg.thumbnailHeight();
     int spacing = 10;
     
-    QScreen *screen = QGuiApplication::primaryScreen();
-    QRect screenGeometry = screen->geometry();
-    
-    int baseX = 0, baseY = 0;
-    
-    switch (position) {
-        case 0: 
-            baseX = spacing;
-            baseY = spacing;
-            break;
-        case 1: 
-            baseX = (screenGeometry.width() - thumbWidth) / 2;
-            baseY = spacing;
-            break;
-        case 2: 
-            baseX = screenGeometry.width() - thumbWidth - spacing;
-            baseY = spacing;
-            break;
-        case 3: 
-            baseX = spacing;
-            baseY = screenGeometry.height() - thumbHeight - spacing;
-            break;
-        case 4: 
-            baseX = (screenGeometry.width() - thumbWidth) / 2;
-            baseY = screenGeometry.height() - thumbHeight - spacing;
-            break;
-        case 5: 
-            baseX = screenGeometry.width() - thumbWidth - spacing;
-            baseY = screenGeometry.height() - thumbHeight - spacing;
-            break;
-    }
+    // Use the custom reference position
+    QPoint refPos = cfg.notLoggedInReferencePosition();
+    int baseX = refPos.x();
+    int baseY = refPos.y();
     
     int offsetX = 0, offsetY = 0;
     

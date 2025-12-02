@@ -34,6 +34,7 @@ ConfigDialog::ConfigDialog(QWidget *parent)
     : QDialog(parent)
     , m_skipProfileSwitchConfirmation(false)
     , m_testThumbnail(nullptr)
+    , m_notLoggedInReferenceThumbnail(nullptr)
 {
     setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
     
@@ -72,6 +73,11 @@ ConfigDialog::~ConfigDialog()
     if (m_testThumbnail) {
         delete m_testThumbnail;
         m_testThumbnail = nullptr;
+    }
+    
+    if (m_notLoggedInReferenceThumbnail) {
+        delete m_notLoggedInReferenceThumbnail;
+        m_notLoggedInReferenceThumbnail = nullptr;
     }
     
     Config::instance().setConfigDialogOpen(false);
@@ -1177,15 +1183,40 @@ void ConfigDialog::createBehaviorPage()
     clientFilterInfoLabel->setStyleSheet(StyleSheet::getInfoLabelStyleSheet());
     clientFilterSectionLayout->addWidget(clientFilterInfoLabel);
     
-    m_showNotLoggedInClientsCheck = new QCheckBox("Show not-logged-in clients");
+    // Not Logged In Section
+    QWidget *notLoggedInSection = new QWidget();
+    notLoggedInSection->setStyleSheet(StyleSheet::getSectionStyleSheet());
+    QVBoxLayout *notLoggedInSectionLayout = new QVBoxLayout(notLoggedInSection);
+    notLoggedInSectionLayout->setContentsMargins(16, 12, 16, 12);
+    notLoggedInSectionLayout->setSpacing(10);
+    
+    tagWidget(notLoggedInSection, {"not logged in", "login", "position", "stack", "overlay"});
+    
+    QLabel *notLoggedInHeader = new QLabel("Not Logged In");
+    notLoggedInHeader->setStyleSheet(StyleSheet::getSectionHeaderStyleSheet());
+    notLoggedInSectionLayout->addWidget(notLoggedInHeader);
+    
+    QLabel *notLoggedInInfoLabel = new QLabel("Configure how EVE clients that are not yet logged in are displayed.");
+    notLoggedInInfoLabel->setStyleSheet(StyleSheet::getInfoLabelStyleSheet());
+    notLoggedInSectionLayout->addWidget(notLoggedInInfoLabel);
+    
+    m_showNotLoggedInClientsCheck = new QCheckBox("Show not-logged-in client thumbnails");
     m_showNotLoggedInClientsCheck->setStyleSheet(StyleSheet::getCheckBoxStyleSheet());
-    clientFilterSectionLayout->addWidget(m_showNotLoggedInClientsCheck);
+    notLoggedInSectionLayout->addWidget(m_showNotLoggedInClientsCheck);
     
     QGridLayout *notLoggedInGrid = new QGridLayout();
     notLoggedInGrid->setSpacing(10);
     notLoggedInGrid->setColumnMinimumWidth(0, 120);
     notLoggedInGrid->setColumnStretch(2, 1);
     notLoggedInGrid->setContentsMargins(24, 0, 0, 0);
+    
+    QLabel *positionLabel = new QLabel("Position:");
+    positionLabel->setStyleSheet(StyleSheet::getLabelStyleSheet());
+    
+    QPushButton *setNotLoggedInPositionButton = new QPushButton("Set Position");
+    setNotLoggedInPositionButton->setToolTip("Set custom position for not-logged-in client thumbnails");
+    setNotLoggedInPositionButton->setStyleSheet(StyleSheet::getButtonStyleSheet());
+    setNotLoggedInPositionButton->setFixedSize(150, 32);
     
     QLabel *stackModeLabel = new QLabel("Stack mode:");
     stackModeLabel->setStyleSheet(StyleSheet::getLabelStyleSheet());
@@ -1196,34 +1227,26 @@ void ConfigDialog::createBehaviorPage()
     m_notLoggedInStackModeCombo->setFixedWidth(150);
     m_notLoggedInStackModeCombo->setStyleSheet(StyleSheet::getComboBoxWithDisabledStyleSheet());
     
-    QLabel *positionLabel = new QLabel("Position:");
-    positionLabel->setStyleSheet(StyleSheet::getLabelStyleSheet());
-    m_notLoggedInPositionCombo = new QComboBox();
-    m_notLoggedInPositionCombo->addItem("Top Left");
-    m_notLoggedInPositionCombo->addItem("Top Center");
-    m_notLoggedInPositionCombo->addItem("Top Right");
-    m_notLoggedInPositionCombo->addItem("Bottom Left");
-    m_notLoggedInPositionCombo->addItem("Bottom Center");
-    m_notLoggedInPositionCombo->addItem("Bottom Right");
-    m_notLoggedInPositionCombo->setFixedWidth(150);
-    m_notLoggedInPositionCombo->setStyleSheet(StyleSheet::getComboBoxWithDisabledStyleSheet());
+    notLoggedInGrid->addWidget(positionLabel, 0, 0, Qt::AlignLeft);
+    notLoggedInGrid->addWidget(setNotLoggedInPositionButton, 0, 1);
+    notLoggedInGrid->addWidget(stackModeLabel, 1, 0, Qt::AlignLeft);
+    notLoggedInGrid->addWidget(m_notLoggedInStackModeCombo, 1, 1);
     
-    notLoggedInGrid->addWidget(stackModeLabel, 0, 0, Qt::AlignLeft);
-    notLoggedInGrid->addWidget(m_notLoggedInStackModeCombo, 0, 1);
-    notLoggedInGrid->addWidget(positionLabel, 1, 0, Qt::AlignLeft);
-    notLoggedInGrid->addWidget(m_notLoggedInPositionCombo, 1, 1);
+    notLoggedInSectionLayout->addLayout(notLoggedInGrid);
     
-    clientFilterSectionLayout->addLayout(notLoggedInGrid);
+    connect(setNotLoggedInPositionButton, &QPushButton::clicked, this, &ConfigDialog::onSetNotLoggedInPosition);
     
     m_showNotLoggedInOverlayCheck = new QCheckBox("Show \"Not Logged In\" overlay text");
     m_showNotLoggedInOverlayCheck->setStyleSheet(StyleSheet::getCheckBoxStyleSheet());
-    clientFilterSectionLayout->addWidget(m_showNotLoggedInOverlayCheck);
+    notLoggedInSectionLayout->addWidget(m_showNotLoggedInOverlayCheck);
     
-    connect(m_showNotLoggedInClientsCheck, &QCheckBox::toggled, this, [this](bool checked) {
+    connect(m_showNotLoggedInClientsCheck, &QCheckBox::toggled, this, [this, setNotLoggedInPositionButton](bool checked) {
         m_notLoggedInStackModeCombo->setEnabled(checked);
-        m_notLoggedInPositionCombo->setEnabled(checked);
         m_showNotLoggedInOverlayCheck->setEnabled(checked);
+        setNotLoggedInPositionButton->setEnabled(checked);
     });
+    
+    layout->addWidget(notLoggedInSection);
     
     QLabel *extraPreviewsSubHeader = new QLabel("Additional Applications:");
     extraPreviewsSubHeader->setStyleSheet(StyleSheet::getSubLabelStyleSheet());
@@ -1931,13 +1954,6 @@ void ConfigDialog::setupBindings()
         0
     ));
     
-    m_bindingManager.addBinding(BindingHelpers::bindComboBox(
-        m_notLoggedInPositionCombo,
-        [&config]() { return config.notLoggedInPosition(); },
-        [&config](int value) { config.setNotLoggedInPosition(value); },
-        0
-    ));
-    
     m_bindingManager.addBinding(BindingHelpers::bindCheckBox(
         m_showNotLoggedInOverlayCheck,
         [&config]() { return config.showNotLoggedInOverlay(); },
@@ -2497,6 +2513,46 @@ void ConfigDialog::onTestOverlays()
         
         m_testThumbnail->raise();
         m_testThumbnail->activateWindow();
+    }
+}
+
+void ConfigDialog::onSetNotLoggedInPosition()
+{
+    if (!m_notLoggedInReferenceThumbnail) {
+        // Create the reference thumbnail
+        m_notLoggedInReferenceThumbnail = new ThumbnailWidget(quintptr(0), "Not Logged In - Reference Position", nullptr);
+        
+        m_notLoggedInReferenceThumbnail->setCharacterName("Not Logged In");
+        m_notLoggedInReferenceThumbnail->setSystemName("");
+        
+        const Config& cfg = Config::instance();
+        m_notLoggedInReferenceThumbnail->resize(cfg.thumbnailWidth(), cfg.thumbnailHeight());
+        
+        QPoint refPos = cfg.notLoggedInReferencePosition();
+        m_notLoggedInReferenceThumbnail->move(refPos);
+        
+        connect(m_notLoggedInReferenceThumbnail, &ThumbnailWidget::positionChanged, 
+                this, [](quintptr, QPoint position) {
+            Config::instance().setNotLoggedInReferencePosition(position);
+            Config::instance().save();
+        });
+        
+        m_notLoggedInReferenceThumbnail->updateOverlays();
+        m_notLoggedInReferenceThumbnail->show();
+        m_notLoggedInReferenceThumbnail->raise();
+        m_notLoggedInReferenceThumbnail->activateWindow();
+    } else {
+        // Toggle visibility
+        if (m_notLoggedInReferenceThumbnail->isVisible()) {
+            m_notLoggedInReferenceThumbnail->hide();
+        } else {
+            const Config& cfg = Config::instance();
+            m_notLoggedInReferenceThumbnail->resize(cfg.thumbnailWidth(), cfg.thumbnailHeight());
+            m_notLoggedInReferenceThumbnail->updateOverlays();
+            m_notLoggedInReferenceThumbnail->show();
+            m_notLoggedInReferenceThumbnail->raise();
+            m_notLoggedInReferenceThumbnail->activateWindow();
+        }
     }
 }
 

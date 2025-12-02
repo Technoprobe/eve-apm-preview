@@ -62,7 +62,8 @@ void Config::refreshCache() const
     
     m_cachedShowNotLoggedIn = m_settings->value(KEY_THUMBNAIL_SHOW_NOT_LOGGED_IN, DEFAULT_THUMBNAIL_SHOW_NOT_LOGGED_IN).toBool();
     m_cachedNotLoggedInStackMode = m_settings->value(KEY_THUMBNAIL_NOT_LOGGED_IN_STACK_MODE, DEFAULT_THUMBNAIL_NOT_LOGGED_IN_STACK_MODE).toInt();
-    m_cachedNotLoggedInPosition = m_settings->value(KEY_THUMBNAIL_NOT_LOGGED_IN_POSITION, DEFAULT_THUMBNAIL_NOT_LOGGED_IN_POSITION).toInt();
+    m_cachedNotLoggedInReferencePosition = m_settings->value(KEY_THUMBNAIL_NOT_LOGGED_IN_REF_POSITION, 
+        QPoint(DEFAULT_THUMBNAIL_NOT_LOGGED_IN_REF_X, DEFAULT_THUMBNAIL_NOT_LOGGED_IN_REF_Y)).toPoint();
     m_cachedShowNotLoggedInOverlay = m_settings->value(KEY_THUMBNAIL_SHOW_NOT_LOGGED_IN_OVERLAY, DEFAULT_THUMBNAIL_SHOW_NOT_LOGGED_IN_OVERLAY).toBool();
     m_cachedShowNonEVEOverlay = m_settings->value(KEY_THUMBNAIL_SHOW_NON_EVE_OVERLAY, DEFAULT_THUMBNAIL_SHOW_NON_EVE_OVERLAY).toBool();
     
@@ -308,15 +309,15 @@ void Config::setNotLoggedInStackMode(int mode)
     invalidateCache();
 }
 
-int Config::notLoggedInPosition() const
+QPoint Config::notLoggedInReferencePosition() const
 {
     refreshCache();
-    return m_cachedNotLoggedInPosition;
+    return m_cachedNotLoggedInReferencePosition;
 }
 
-void Config::setNotLoggedInPosition(int position)
+void Config::setNotLoggedInReferencePosition(const QPoint& pos)
 {
-    m_settings->setValue(KEY_THUMBNAIL_NOT_LOGGED_IN_POSITION, position);
+    m_settings->setValue(KEY_THUMBNAIL_NOT_LOGGED_IN_REF_POSITION, pos);
     invalidateCache();
 }
 
@@ -845,7 +846,7 @@ void Config::initializeDefaultProfile()
     m_settings->setValue(KEY_THUMBNAIL_PROCESS_NAMES, defaultProcessNames);
     m_settings->setValue(KEY_THUMBNAIL_SHOW_NOT_LOGGED_IN, DEFAULT_THUMBNAIL_SHOW_NOT_LOGGED_IN);
     m_settings->setValue(KEY_THUMBNAIL_NOT_LOGGED_IN_STACK_MODE, DEFAULT_THUMBNAIL_NOT_LOGGED_IN_STACK_MODE);
-    m_settings->setValue(KEY_THUMBNAIL_NOT_LOGGED_IN_POSITION, DEFAULT_THUMBNAIL_NOT_LOGGED_IN_POSITION);
+    m_settings->setValue(KEY_THUMBNAIL_NOT_LOGGED_IN_REF_POSITION, QPoint(DEFAULT_THUMBNAIL_NOT_LOGGED_IN_REF_X, DEFAULT_THUMBNAIL_NOT_LOGGED_IN_REF_Y));
     m_settings->setValue(KEY_THUMBNAIL_SHOW_NOT_LOGGED_IN_OVERLAY, DEFAULT_THUMBNAIL_SHOW_NOT_LOGGED_IN_OVERLAY);
     m_settings->setValue(KEY_THUMBNAIL_SHOW_NON_EVE_OVERLAY, DEFAULT_THUMBNAIL_SHOW_NON_EVE_OVERLAY);
     
@@ -1010,7 +1011,7 @@ bool Config::createProfile(const QString& profileName, bool useDefaults)
         newProfile.setValue(KEY_THUMBNAIL_PROCESS_NAMES, defaultProcessNames);
         newProfile.setValue(KEY_THUMBNAIL_SHOW_NOT_LOGGED_IN, DEFAULT_THUMBNAIL_SHOW_NOT_LOGGED_IN);
         newProfile.setValue(KEY_THUMBNAIL_NOT_LOGGED_IN_STACK_MODE, DEFAULT_THUMBNAIL_NOT_LOGGED_IN_STACK_MODE);
-        newProfile.setValue(KEY_THUMBNAIL_NOT_LOGGED_IN_POSITION, DEFAULT_THUMBNAIL_NOT_LOGGED_IN_POSITION);
+        newProfile.setValue(KEY_THUMBNAIL_NOT_LOGGED_IN_REF_POSITION, QPoint(DEFAULT_THUMBNAIL_NOT_LOGGED_IN_REF_X, DEFAULT_THUMBNAIL_NOT_LOGGED_IN_REF_Y));
         newProfile.setValue(KEY_THUMBNAIL_SHOW_NOT_LOGGED_IN_OVERLAY, DEFAULT_THUMBNAIL_SHOW_NOT_LOGGED_IN_OVERLAY);
         newProfile.setValue(KEY_THUMBNAIL_SHOW_NON_EVE_OVERLAY, DEFAULT_THUMBNAIL_SHOW_NON_EVE_OVERLAY);
 
