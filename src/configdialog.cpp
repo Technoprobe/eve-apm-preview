@@ -131,7 +131,7 @@ void ConfigDialog::setupUI()
     QWidget *rightPanel = new QWidget();
     rightPanel->setStyleSheet(StyleSheet::getRightPanelStyleSheet());
     QVBoxLayout *rightLayout = new QVBoxLayout(rightPanel);
-    rightLayout->setContentsMargins(10, 20, 8, 10);
+    rightLayout->setContentsMargins(10, 15, 8, 10);
     
     m_stackedWidget = new QStackedWidget();
     m_stackedWidget->setStyleSheet(StyleSheet::getStackedWidgetStyleSheet());
@@ -215,12 +215,8 @@ void ConfigDialog::createAppearancePage()
     
     QWidget *scrollWidget = new QWidget();
     QVBoxLayout *layout = new QVBoxLayout(scrollWidget);
-    layout->setSpacing(20);
+    layout->setSpacing(10);
     layout->setContentsMargins(0, 0, 5, 0);
-    
-    QLabel *titleLabel = new QLabel("Appearance");
-    titleLabel->setStyleSheet(StyleSheet::getTitleLabelStyleSheet());
-    layout->addWidget(titleLabel);
     
     QWidget *sizeSection = new QWidget();
     sizeSection->setStyleSheet(StyleSheet::getSectionStyleSheet());
@@ -646,11 +642,7 @@ void ConfigDialog::createHotkeysPage()
     QVBoxLayout *layout = new QVBoxLayout(scrollWidget);
     layout->setSpacing(20);
     layout->setContentsMargins(0, 0, 5, 0);
-    
-    QLabel *titleLabel = new QLabel("Hotkey Settings");
-    titleLabel->setStyleSheet(StyleSheet::getTitleLabelStyleSheet());
-    layout->addWidget(titleLabel);
-    
+       
     QString hotkeyButtonStyle = StyleSheet::getHotkeyButtonStyleSheet();
     
     QWidget *suspendSection = new QWidget();
@@ -1043,11 +1035,7 @@ void ConfigDialog::createBehaviorPage()
     QVBoxLayout *layout = new QVBoxLayout(scrollWidget);
     layout->setSpacing(20);
     layout->setContentsMargins(0, 0, 5, 0);
-    
-    QLabel *titleLabel = new QLabel("Behavior");
-    titleLabel->setStyleSheet(StyleSheet::getTitleLabelStyleSheet());
-    layout->addWidget(titleLabel);
-    
+       
     QWidget *windowSection = new QWidget();
     windowSection->setStyleSheet(StyleSheet::getSectionStyleSheet());
     QVBoxLayout *windowSectionLayout = new QVBoxLayout(windowSection);
@@ -1382,11 +1370,7 @@ void ConfigDialog::createPerformancePage()
     QVBoxLayout *layout = new QVBoxLayout(scrollWidget);
     layout->setSpacing(20);
     layout->setContentsMargins(0, 0, 5, 0);
-    
-    QLabel *titleLabel = new QLabel("Performance");
-    titleLabel->setStyleSheet(StyleSheet::getTitleLabelStyleSheet());
-    layout->addWidget(titleLabel);
-    
+       
     QWidget *intervalSection = new QWidget();
     intervalSection->setStyleSheet(StyleSheet::getSectionStyleSheet());
     QVBoxLayout *intervalSectionLayout = new QVBoxLayout(intervalSection);
@@ -1460,11 +1444,7 @@ void ConfigDialog::createDataSourcesPage()
     QVBoxLayout *layout = new QVBoxLayout(scrollWidget);
     layout->setSpacing(20);
     layout->setContentsMargins(0, 0, 5, 0);
-    
-    QLabel *titleLabel = new QLabel("Data Sources");
-    titleLabel->setStyleSheet(StyleSheet::getTitleLabelStyleSheet());
-    layout->addWidget(titleLabel);
-    
+       
     QWidget *logMonitoringSection = new QWidget();
     logMonitoringSection->setStyleSheet(StyleSheet::getSectionStyleSheet());
     QVBoxLayout *logSectionLayout = new QVBoxLayout(logMonitoringSection);
@@ -1828,11 +1808,7 @@ void ConfigDialog::createLegacySettingsPage()
     QVBoxLayout *layout = new QVBoxLayout(scrollWidget);
     layout->setSpacing(20);
     layout->setContentsMargins(0, 0, 5, 0);
-    
-    QLabel *titleLabel = new QLabel("Legacy Settings");
-    titleLabel->setStyleSheet(StyleSheet::getTitleLabelStyleSheet());
-    layout->addWidget(titleLabel);
-    
+       
     QWidget *browseSection = new QWidget();
     browseSection->setStyleSheet(StyleSheet::getSectionStyleSheet());
     QVBoxLayout *browseSectionLayout = new QVBoxLayout(browseSection);
