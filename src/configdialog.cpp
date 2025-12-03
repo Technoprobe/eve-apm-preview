@@ -28,6 +28,11 @@
 #include <QGraphicsOpacityEffect>
 #include <QMap>
 #include <QRegularExpression>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QDesktopServices>
+#include <QUrl>
 #include <algorithm>
 
 ConfigDialog::ConfigDialog(QWidget *parent)
@@ -35,6 +40,7 @@ ConfigDialog::ConfigDialog(QWidget *parent)
     , m_skipProfileSwitchConfirmation(false)
     , m_testThumbnail(nullptr)
     , m_notLoggedInReferenceThumbnail(nullptr)
+    , m_networkManager(nullptr)
 {
     setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
     
@@ -65,7 +71,7 @@ ConfigDialog::ConfigDialog(QWidget *parent)
     }
     
     setWindowTitle("Settings");
-    resize(920, 600);
+    resize(920, 800);
 }
 
 ConfigDialog::~ConfigDialog()
@@ -78,6 +84,11 @@ ConfigDialog::~ConfigDialog()
     if (m_notLoggedInReferenceThumbnail) {
         delete m_notLoggedInReferenceThumbnail;
         m_notLoggedInReferenceThumbnail = nullptr;
+    }
+    
+    if (m_networkManager) {
+        delete m_networkManager;
+        m_networkManager = nullptr;
     }
     
     Config::instance().setConfigDialogOpen(false);
@@ -1794,53 +1805,41 @@ void ConfigDialog::createAboutPage()
     
     layout->addSpacing(15);
     
-    QWidget *featuresSection = new QWidget();
-    featuresSection->setStyleSheet(StyleSheet::getSectionStyleSheet());
-    QVBoxLayout *featuresSectionLayout = new QVBoxLayout(featuresSection);
-    featuresSectionLayout->setContentsMargins(16, 12, 16, 12);
-    featuresSectionLayout->setSpacing(8);
+    // Update Check Section
+    QWidget *updateSection = new QWidget();
+    updateSection->setStyleSheet(StyleSheet::getSectionStyleSheet());
+    QVBoxLayout *updateSectionLayout = new QVBoxLayout(updateSection);
+    updateSectionLayout->setContentsMargins(16, 12, 16, 12);
+    updateSectionLayout->setSpacing(8);
     
-    QLabel *featuresHeader = new QLabel("Features");
-    featuresHeader->setStyleSheet(StyleSheet::getSubsectionHeaderStyleSheet());
-    featuresSectionLayout->addWidget(featuresHeader);
+    QLabel *updateHeader = new QLabel("Update Check");
+    updateHeader->setStyleSheet(StyleSheet::getSubsectionHeaderStyleSheet());
+    updateSectionLayout->addWidget(updateHeader);
     
-    QStringList features = {
-        "🖼️  Live thumbnail previews",
-        "🖱️  Click-to-switch window activation",
-        "⌨️  Customizable hotkeys",
-        "🎯  Active window highlighting",
-        "📝  Character and system name overlays",
-        "🎨  Modern configuration UI"
-    };
+    QHBoxLayout *updateCheckLayout = new QHBoxLayout();
     
-    for (const QString& feature : features) {
-        QLabel *featureLabel = new QLabel(feature);
-        featureLabel->setStyleSheet(StyleSheet::getFeatureLabelStyleSheet());
-        featuresSectionLayout->addWidget(featureLabel);
-    }
+    m_updateStatusLabel = new QLabel("Click 'Check for Updates' to see if a newer version is available.");
+    m_updateStatusLabel->setStyleSheet(StyleSheet::getFeatureLabelStyleSheet());
+    m_updateStatusLabel->setWordWrap(true);
+    updateCheckLayout->addWidget(m_updateStatusLabel, 1);
     
-    layout->addWidget(featuresSection);
+    m_checkUpdateButton = new QPushButton("Check for Updates");
+    m_checkUpdateButton->setStyleSheet(StyleSheet::getButtonStyleSheet());
+    connect(m_checkUpdateButton, &QPushButton::clicked, this, &ConfigDialog::onCheckForUpdates);
+    updateCheckLayout->addWidget(m_checkUpdateButton);
+    m_checkUpdateButton->setFixedSize(160, 32);
     
-    QWidget *techSection = new QWidget();
-    techSection->setStyleSheet(StyleSheet::getSectionStyleSheet());
-    QVBoxLayout *techSectionLayout = new QVBoxLayout(techSection);
-    techSectionLayout->setContentsMargins(16, 12, 16, 12);
-    techSectionLayout->setSpacing(8);
+    updateSectionLayout->addLayout(updateCheckLayout);
     
-    QLabel *techHeader = new QLabel("Technology");
-    techHeader->setStyleSheet(StyleSheet::getSubsectionHeaderStyleSheet());
-    techSectionLayout->addWidget(techHeader);
+    m_downloadUpdateButton = new QPushButton("Download Latest Release");
+    m_downloadUpdateButton->setStyleSheet(StyleSheet::getButtonStyleSheet());
+    m_downloadUpdateButton->setVisible(false);
+    connect(m_downloadUpdateButton, &QPushButton::clicked, this, &ConfigDialog::onDownloadUpdate);
+    updateSectionLayout->addWidget(m_downloadUpdateButton);
     
-    QLabel *techLabel = new QLabel(
-        QString("🤓  Built with C++20 and Qt %1\n"
-                "🪟  Uses Windows DWM API for live thumbnails\n"
-                "🦾  Made with lots of help from Claude 4.5").arg(QT_VERSION_STR)
-    );
-    techLabel->setStyleSheet(StyleSheet::getTechLabelStyleSheet());
-    techLabel->setWordWrap(true);
-    techSectionLayout->addWidget(techLabel);
+    layout->addWidget(updateSection);
     
-    layout->addWidget(techSection);
+    layout->addSpacing(15);
     
     QWidget *thanksSection = new QWidget();
     thanksSection->setStyleSheet(StyleSheet::getSectionStyleSheet());
@@ -1868,7 +1867,8 @@ void ConfigDialog::createAboutPage()
         "Oebrun",
         "Kondo Rio Sotken",
         "Zack Power",
-        "Langanmyer Nor"
+        "Langanmyer Nor",
+        "ham Norris"
     };
     
     int row = 0;
@@ -6196,4 +6196,92 @@ void ConfigDialog::onDeleteProfile()
 
 void ConfigDialog::onCopyLegacyCategory(const QString& category)
 {
+}
+
+void ConfigDialog::onCheckForUpdates()
+{
+    if (!m_networkManager) {
+        m_networkManager = new QNetworkAccessManager(this);
+    }
+    
+    m_checkUpdateButton->setEnabled(false);
+    m_updateStatusLabel->setText("🔄 Checking for updates...");
+    m_downloadUpdateButton->setVisible(false);
+    
+    QUrl url("https://api.github.com/repos/mrmjstc/eve-apm-preview/releases/latest");
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::UserAgentHeader, "EVE-APM-Preview");
+    
+    QNetworkReply *reply = m_networkManager->get(request);
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        m_checkUpdateButton->setEnabled(true);
+        
+        if (reply->error() != QNetworkReply::NoError) {
+            m_updateStatusLabel->setText(QString("❌ Error checking for updates: %1").arg(reply->errorString()));
+            return;
+        }
+        
+        QByteArray data = reply->readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(data);
+        
+        if (!doc.isObject()) {
+            m_updateStatusLabel->setText("❌ Invalid response from GitHub API");
+            return;
+        }
+        
+        QJsonObject obj = doc.object();
+        QString latestVersion = obj["tag_name"].toString();
+        QString releaseUrl = obj["html_url"].toString();
+        
+        if (latestVersion.isEmpty()) {
+            m_updateStatusLabel->setText("❌ Could not determine latest version");
+            return;
+        }
+        
+        // Remove 'v' prefix if present
+        QString cleanLatestVersion = latestVersion;
+        if (cleanLatestVersion.startsWith('v')) {
+            cleanLatestVersion = cleanLatestVersion.mid(1);
+        }
+        
+        QString currentVersion = APP_VERSION;
+        
+        // Compare versions
+        if (compareVersions(currentVersion, cleanLatestVersion) < 0) {
+            m_updateStatusLabel->setText(QString("🎉 New version available: %1 (you have %2)")
+                                        .arg(latestVersion)
+                                        .arg(currentVersion));
+            m_downloadUpdateButton->setVisible(true);
+            m_latestReleaseUrl = "https://github.com/mrmjstc/eve-apm-preview/releases";
+        } else {
+            m_updateStatusLabel->setText(QString("✅ You have the latest version (%1)").arg(currentVersion));
+            m_downloadUpdateButton->setVisible(false);
+        }
+    });
+}
+
+void ConfigDialog::onDownloadUpdate()
+{
+    if (!m_latestReleaseUrl.isEmpty()) {
+        QDesktopServices::openUrl(QUrl(m_latestReleaseUrl));
+    }
+}
+
+int ConfigDialog::compareVersions(const QString& version1, const QString& version2)
+{
+    QStringList v1Parts = version1.split('.');
+    QStringList v2Parts = version2.split('.');
+    
+    int maxLength = qMax(v1Parts.length(), v2Parts.length());
+    
+    for (int i = 0; i < maxLength; ++i) {
+        int v1 = (i < v1Parts.length()) ? v1Parts[i].toInt() : 0;
+        int v2 = (i < v2Parts.length()) ? v2Parts[i].toInt() : 0;
+        
+        if (v1 < v2) return -1;
+        if (v1 > v2) return 1;
+    }
+    
+    return 0;
 }

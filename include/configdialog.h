@@ -19,6 +19,7 @@
 class HotkeyCapture;
 class QVBoxLayout;
 class ThumbnailWidget;
+class QNetworkAccessManager;
 
 class ConfigDialog : public QDialog
 {
@@ -69,6 +70,8 @@ private slots:
     void onBrowseGameLogDirectory();
     void onSetNotLoggedInPosition();
     void onSetClientLocations();
+    void onCheckForUpdates();
+    void onDownloadUpdate();
     
     void onProfileChanged(int index);
     void onNewProfile();
@@ -110,6 +113,7 @@ private:
     void updateProfileDropdown();
     void switchProfile(const QString& profileName);
     bool confirmProfileSwitch();
+    int compareVersions(const QString& version1, const QString& version2);
     
     QListWidget *m_categoryList;
     QStackedWidget *m_stackedWidget;
@@ -237,6 +241,13 @@ private:
     HotkeyCapture *m_closeAllClientsCapture;
     QCheckBox *m_wildcardHotkeysCheck;
     QCheckBox *m_hotkeysOnlyWhenEVEFocusedCheck;
+    
+    // Update check UI
+    QLabel *m_updateStatusLabel;
+    QPushButton *m_checkUpdateButton;
+    QPushButton *m_downloadUpdateButton;
+    QNetworkAccessManager *m_networkManager;
+    QString m_latestReleaseUrl;
     
     SettingBindingManager m_bindingManager;
 };
