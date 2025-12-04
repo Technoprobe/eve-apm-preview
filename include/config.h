@@ -350,6 +350,8 @@ private:
     mutable QStringList m_cachedEnabledCombatEventTypes;
     mutable int m_cachedMiningTimeoutSeconds;
     
+    mutable QHash<QString, QColor> m_cachedCharacterBorderColors;
+    
     bool m_configDialogOpen = false;
     
     QString m_currentProfileName;

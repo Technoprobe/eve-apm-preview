@@ -136,6 +136,18 @@ void Config::refreshCache() const
     m_cachedEnabledCombatEventTypes = m_settings->value(KEY_COMBAT_ENABLED_EVENT_TYPES, DEFAULT_COMBAT_MESSAGE_EVENT_TYPES()).toStringList();
     m_cachedMiningTimeoutSeconds = m_settings->value(KEY_MINING_TIMEOUT_SECONDS, DEFAULT_MINING_TIMEOUT_SECONDS).toInt();
     
+    // Cache character border colors
+    m_cachedCharacterBorderColors.clear();
+    m_settings->beginGroup("characterBorderColors");
+    QStringList characterNames = m_settings->childKeys();
+    for (const QString& characterName : characterNames) {
+        QColor color = m_settings->value(characterName).value<QColor>();
+        if (color.isValid()) {
+            m_cachedCharacterBorderColors[characterName] = color;
+        }
+    }
+    m_settings->endGroup();
+    
     m_cacheValid = true;
 }
 
@@ -508,40 +520,28 @@ void Config::setThumbnailPosition(const QString& characterName, const QPoint& po
 
 QColor Config::getCharacterBorderColor(const QString& characterName) const
 {
-    QString key = QString("characterBorderColors/%1").arg(characterName);
-    return m_settings->value(key, QColor()).value<QColor>();
+    refreshCache();
+    return m_cachedCharacterBorderColors.value(characterName, QColor());
 }
 
 void Config::setCharacterBorderColor(const QString& characterName, const QColor& color)
 {
     QString key = QString("characterBorderColors/%1").arg(characterName);
     m_settings->setValue(key, color.name());
+    invalidateCache();
 }
 
 void Config::removeCharacterBorderColor(const QString& characterName)
 {
     QString key = QString("characterBorderColors/%1").arg(characterName);
     m_settings->remove(key);
+    invalidateCache();
 }
 
 QHash<QString, QColor> Config::getAllCharacterBorderColors() const
 {
-    QHash<QString, QColor> colors;
-    
-    m_settings->beginGroup("characterBorderColors");
-    
-    QStringList characterNames = m_settings->childKeys();
-    
-    for (const QString& characterName : characterNames) {
-        QColor color = m_settings->value(characterName).value<QColor>();
-        if (color.isValid()) {
-            colors[characterName] = color;
-        }
-    }
-    
-    m_settings->endGroup();
-    
-    return colors;
+    refreshCache();
+    return m_cachedCharacterBorderColors;
 }
 
 bool Config::enableSnapping() const
