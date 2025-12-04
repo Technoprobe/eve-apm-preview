@@ -1164,12 +1164,29 @@ void MainWindow::applySettings()
         }
     }
     
+    // Prepare default layout parameters in case we need to re-layout thumbnails
+    QScreen *primaryScreen = QGuiApplication::primaryScreen();
+    QRect screenGeometry = primaryScreen->geometry();
+    int screenWidth = screenGeometry.width();
+    int screenHeight = screenGeometry.height();
+    int margin = 10;
+    int thumbWidth = cfg.thumbnailWidth();
+    int thumbHeight = cfg.thumbnailHeight();
+    
+    int xOffset = margin;
+    int yOffset = margin;
+    int thumbnailsPerRow = (screenWidth - margin) / (thumbWidth + margin);
+    if (thumbnailsPerRow < 1) thumbnailsPerRow = 1;
+    
+    int notLoggedInCount = 0;
+    bool rememberPos = cfg.rememberPositions();
+    
     for (auto it = thumbnails.begin(); it != thumbnails.end(); ++it) {
         HWND hwnd = it.key();
         ThumbnailWidget* thumb = it.value();
         
         QSize currentSize = thumb->size();
-        QSize newSize(cfg.thumbnailWidth(), cfg.thumbnailHeight());
+        QSize newSize(thumbWidth, thumbHeight);
         if (currentSize != newSize) {
             thumb->setFixedSize(newSize);
         }
@@ -1178,12 +1195,13 @@ void MainWindow::applySettings()
         
         thumb->updateWindowFlags(cfg.alwaysOnTop());
         
-        if (cfg.rememberPositions()) {
-            QString processName = m_windowProcessNames.value(hwnd, "");
-            bool isEVEClient = processName.compare("exefile.exe", Qt::CaseInsensitive) == 0;
-            
-            QPoint savedPos(-1, -1);
-            bool hasSavedPosition = false;
+        QString processName = m_windowProcessNames.value(hwnd, "");
+        bool isEVEClient = processName.compare("exefile.exe", Qt::CaseInsensitive) == 0;
+        
+        QPoint savedPos(-1, -1);
+        bool hasSavedPosition = false;
+        
+        if (rememberPos) {
             if (isEVEClient) {
                 QString characterName = m_windowToCharacter.value(hwnd);
                 if (!characterName.isEmpty()) {
@@ -1198,22 +1216,47 @@ void MainWindow::applySettings()
                     hasSavedPosition = (savedPos != QPoint(-1, -1));
                 }
             }
+        }
+        
+        if (hasSavedPosition) {
+            QRect thumbRect(savedPos, QSize(thumbWidth, thumbHeight));
+            QScreen* targetScreen = nullptr;
+            for (QScreen* screen : QGuiApplication::screens()) {
+                if (screen->geometry().intersects(thumbRect)) {
+                    targetScreen = screen;
+                    break;
+                }
+            }
             
-            if (hasSavedPosition) {
-                int thumbWidth = cfg.thumbnailWidth();
-                int thumbHeight = cfg.thumbnailHeight();
-                QRect thumbRect(savedPos, QSize(thumbWidth, thumbHeight));
-                QScreen* targetScreen = nullptr;
-                for (QScreen* screen : QGuiApplication::screens()) {
-                    if (screen->geometry().intersects(thumbRect)) {
-                        targetScreen = screen;
-                        break;
-                    }
+            if (targetScreen) {
+                thumb->move(savedPos);
+            } else {
+                // Saved position is off-screen, use default layout
+                hasSavedPosition = false;
+            }
+        }
+        
+        // If no saved position or rememberPositions is disabled, use default layout
+        if (!hasSavedPosition) {
+            QString characterName = m_windowToCharacter.value(hwnd);
+            bool isNotLoggedIn = isEVEClient && characterName.isEmpty();
+            
+            if (isNotLoggedIn) {
+                QPoint pos = calculateNotLoggedInPosition(notLoggedInCount);
+                thumb->move(pos);
+                notLoggedInCount++;
+            } else {
+                if (xOffset + thumbWidth > screenWidth - margin) {
+                    xOffset = margin;
+                    yOffset += thumbHeight + margin;
                 }
                 
-                if (targetScreen) {
-                    thumb->move(savedPos);
+                if (yOffset + thumbHeight > screenHeight - margin) {
+                    yOffset = margin;
                 }
+                
+                thumb->move(xOffset, yOffset);
+                xOffset += thumbWidth + margin;
             }
         }
         
