@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "hotkeymanager.h"
+#include "version.h"
 #include <QApplication>
 #include <QAbstractNativeEventFilter>
 #include <QMessageBox>
@@ -45,7 +46,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
     
     app.setApplicationName("EVE-APM Preview");
-    app.setApplicationVersion("1.0.0");
+    app.setApplicationVersion(APP_VERSION);
     app.setOrganizationName("EVEAPMPreview");
     
     QIcon icon(":/bee.png");
