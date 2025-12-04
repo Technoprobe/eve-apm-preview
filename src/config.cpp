@@ -168,40 +168,6 @@ void Config::setFileChangeDebounceMs(int milliseconds)
     invalidateCache();
 }
 
-int Config::fileChangeDebounceForCharacter(const QString& characterName) const
-{
-    QString key = QString("%1/%2").arg(KEY_CHATLOG_FILEDEBOUNCE_CHAR_GROUP).arg(characterName);
-    if (m_settings->contains(key)) {
-        return m_settings->value(key, -1).toInt();
-    }
-    return -1; 
-}
-
-void Config::setFileChangeDebounceForCharacter(const QString& characterName, int milliseconds)
-{
-    QString key = QString("%1/%2").arg(KEY_CHATLOG_FILEDEBOUNCE_CHAR_GROUP).arg(characterName);
-    m_settings->setValue(key, milliseconds);
-}
-
-void Config::removeFileChangeDebounceForCharacter(const QString& characterName)
-{
-    QString key = QString("%1/%2").arg(KEY_CHATLOG_FILEDEBOUNCE_CHAR_GROUP).arg(characterName);
-    m_settings->remove(key);
-}
-
-QHash<QString, int> Config::getAllFileChangeDebounceThresholds() const
-{
-    QHash<QString, int> thresholds;
-    m_settings->beginGroup(KEY_CHATLOG_FILEDEBOUNCE_CHAR_GROUP);
-    QStringList keys = m_settings->childKeys();
-    for (const QString& k : keys) {
-        int v = m_settings->value(k).toInt();
-        thresholds.insert(k, v);
-    }
-    m_settings->endGroup();
-    return thresholds;
-}
-
 bool Config::highlightActiveWindow() const
 {
     refreshCache();

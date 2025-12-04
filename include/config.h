@@ -194,11 +194,6 @@ public:
     int fileChangeDebounceMs() const;
     void setFileChangeDebounceMs(int milliseconds);
 
-    int fileChangeDebounceForCharacter(const QString& characterName) const;
-    void setFileChangeDebounceForCharacter(const QString& characterName, int milliseconds);
-    void removeFileChangeDebounceForCharacter(const QString& characterName);
-    QHash<QString, int> getAllFileChangeDebounceThresholds() const;
-
     QString configFilePath() const;
     
     void save();
@@ -419,7 +414,6 @@ private:
     static constexpr const char* KEY_CHATLOG_ENABLE_MONITORING = "chatlog/enableMonitoring";
     static constexpr const char* KEY_CHATLOG_DIRECTORY = "chatlog/directory";
     static constexpr const char* KEY_CHATLOG_FILEDEBOUNCE_MS = "chatlog/fileDebounceMs";
-    static constexpr const char* KEY_CHATLOG_FILEDEBOUNCE_CHAR_GROUP = "chatlog/fileDebounceThresholds";
 
     static constexpr const char* KEY_GAMELOG_ENABLE_MONITORING = "gamelog/enableMonitoring";
     static constexpr const char* KEY_GAMELOG_DIRECTORY = "gamelog/directory";
