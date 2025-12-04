@@ -76,6 +76,7 @@ ConfigDialog::ConfigDialog(QWidget *parent)
 
 ConfigDialog::~ConfigDialog()
 {
+    // Manual deletion required - these widgets were created with nullptr parent
     if (m_testThumbnail) {
         delete m_testThumbnail;
         m_testThumbnail = nullptr;
@@ -86,10 +87,8 @@ ConfigDialog::~ConfigDialog()
         m_notLoggedInReferenceThumbnail = nullptr;
     }
     
-    if (m_networkManager) {
-        delete m_networkManager;
-        m_networkManager = nullptr;
-    }
+    // m_networkManager is automatically deleted by Qt (created with 'this' as parent)
+    // Other heap-allocated widgets (UI elements) are also auto-deleted via parent-child ownership
     
     Config::instance().setConfigDialogOpen(false);
 }

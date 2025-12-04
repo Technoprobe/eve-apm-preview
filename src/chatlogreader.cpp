@@ -1041,6 +1041,11 @@ ChatLogReader::~ChatLogReader()
         m_workerThread->terminate();
         m_workerThread->wait();
     }
+    
+    // Manual deletion required - worker has no parent (moved to separate thread)
+    delete m_worker;
+    m_worker = nullptr;
+    
     qDebug() << "ChatLogReader: Destroyed";
 }
 
